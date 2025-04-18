@@ -1,23 +1,34 @@
 package com.frogcrew.frogcrew_backend.crewmember.dto;
 
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+
 import jakarta.validation.constraints.NotEmpty;
+
+import java.util.List;
 
 public record UserDto (
 
      Integer id,
+    @NotEmpty(message = "Firstname is required.")
+    String firstName,
+    @NotEmpty(message = "Lastname is required.")
+    String lastName,
+     @NotEmpty(message = "Email is required.")
+     String email,
+    @NotEmpty(message = "Phone number is required.")
+    String phoneNumber,
 
-    @NotEmpty(message = "username is required.")
-    String username,
+@NotEmpty(message = "Role is required.")
+String role,
+@NotEmpty(message = "Positions is required")
+     List<String> positions)
 
-    @NotEmpty(message = "password is required.")
-    String password,
 
-    @NotEmpty(message = "email is required.")
-    String email){
 
+//    @NotEmpty(message = "password is required.")
+//    String password,
+
+
+        {
 
 }

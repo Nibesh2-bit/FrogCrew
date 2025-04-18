@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class UserToUserDtoConverter implements Converter<CrewMemberUser, UserDto> {
     @Override
     public UserDto convert(CrewMemberUser source) {
-        final UserDto userDto = new UserDto(source.getId(), source.getUsername(), source.getPassword(), source.getEmail());
+        final UserDto userDto = new UserDto(source.getId(), source.getFirstName(), source.getLastName(), source.getEmail(), source.getPhoneNumber(), source.getRole(),source.getPositions());
         return userDto;
     }
 

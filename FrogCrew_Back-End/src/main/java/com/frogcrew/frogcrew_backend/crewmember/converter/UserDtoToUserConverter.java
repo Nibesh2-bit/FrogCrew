@@ -11,8 +11,10 @@ public class UserDtoToUserConverter implements Converter<UserDto, CrewMemberUser
     @Override
     public CrewMemberUser convert(UserDto userDto) {
         CrewMemberUser crewMemberUser = new CrewMemberUser();
-        crewMemberUser.setUsername(userDto.username());
-        crewMemberUser.setPassword(userDto.password());
+        crewMemberUser.setFirstName(userDto.firstName());
+        crewMemberUser.setLastName(userDto.lastName());
+        crewMemberUser.setEmail(userDto.email());
+
         crewMemberUser.setEmail(userDto.email());
         return crewMemberUser;
 
