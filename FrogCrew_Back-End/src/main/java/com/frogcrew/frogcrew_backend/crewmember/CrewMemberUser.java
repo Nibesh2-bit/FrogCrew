@@ -67,51 +67,51 @@ public class CrewMemberUser  implements Serializable {
         this.id = id;
     }
 
-    public @NotEmpty(message = "firstname is required.") String getFirstName() {
+    public @NotEmpty(message = "Firstname is required") String getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(@NotEmpty(message = "firstname is required.") String firstName) {
+    public void setFirstName(@NotEmpty(message = "Firstname is required") String firstName) {
         this.firstName = firstName;
     }
 
-    public @NotEmpty(message = "Lastname is required.") String getLastName() {
+    public @NotEmpty(message = "Lastname is required") String getLastName() {
         return lastName;
     }
 
-    public void setLastName(@NotEmpty(message = "Lastname is required.") String lastName) {
+    public void setLastName(@NotEmpty(message = "Lastname is required") String lastName) {
         this.lastName = lastName;
     }
 
-    public @NotEmpty(message = "Email is required.") String getEmail() {
+    public @NotEmpty(message = "Email is required") String getEmail() {
         return email;
     }
 
-    public void setEmail(@NotEmpty(message = "Email is required.") String email) {
+    public void setEmail(@NotEmpty(message = "Email is required") String email) {
         this.email = email;
     }
 
-    public @NotEmpty(message = "Password is required.") String getPassword() {
+    public @NotEmpty(message = "Password is required") String getPassword() {
         return password;
     }
 
-    public void setPassword(@NotEmpty(message = "Password is required.") String password) {
+    public void setPassword(@NotEmpty(message = "Password is required") String password) {
         this.password = password;
     }
 
-    public @NotEmpty(message = "Phone number is required.") String getPhoneNumber() {
+    public @NotEmpty(message = "Phone number is required") String getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(@NotEmpty(message = "Phone number is required.") String phoneNumber) {
+    public void setPhoneNumber(@NotEmpty(message = "Phone number is required") String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public @NotEmpty(message = "Role is required.") String getRole() {
+    public @NotEmpty(message = "Role is required") String getRole() {
         return role;
     }
 
-    public void setRole(@NotEmpty(message = "Role is required.") String role) {
+    public void setRole(@NotEmpty(message = "Role is required") String role) {
         this.role = role;
     }
 

@@ -1,87 +1,203 @@
 package com.frogcrew.frogcrew_backend.crewmember;
 
-
+import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
+import com.frogcrew.frogcrew_backend.security.invite.EmailService;
+import com.frogcrew.frogcrew_backend.security.invite.InvitationToken;
+import com.frogcrew.frogcrew_backend.security.invite.InvitationRepository;
+import com.frogcrew.frogcrew_backend.security.invite.dto.EmailDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
-    @Mock
-    UserRepository userRepository;
+class UserServiceTest {
 
     @Mock
-    PasswordEncoder passwordEncoder;
+    private UserRepository userRepository;
+
+    @Mock
+    private InvitationRepository invitationRepository;
+
+    @Mock
+    private EmailService emailService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    UserService userService;
+    private UserService userService;
 
-    List<CrewMemberUser> crewMemberUsers;
+    private CrewMemberDto validDto;
+
     @BeforeEach
-    public void setUp() {
-
+    void setUp() {
+        validDto = new CrewMemberDto(
+                null,
+                "John",
+                "Doe",
+                "john.doe@example.com",
+                "1234567890",
+                "P@ssw0rd",
+                "ADMIN",
+                List.of("Referee", "Coach")
+        );
     }
 
+    /**
+     * Test that addUser saves the user when the token is valid and email matches.
+     */
     @Test
-    void testSaveSuccess(){
-        //Given
+    void testAddUserValidEmailAndToken() {
+        InvitationToken validToken = new InvitationToken(
+                "token123",
+                validDto.email(),
+                false,
+                LocalDateTime.now().plusHours(1)
+        );
 
-        CrewMemberUser newUser = new CrewMemberUser();
-        newUser.setFirstName("John");
-        newUser.setLastName("Doe");
-        newUser.setEmail("john@doe.com");
-        newUser.setPhoneNumber("password");
-        newUser.setRole("ADMIN");
-        List Positions = new ArrayList();
-        Positions.add("Director");
-        Positions.add("Producer");
-        newUser.setPositions(Positions);
-        //crewMemberUsers.add(newUser);
-
-        given(this.passwordEncoder.encode(newUser.getPassword())).willReturn("password");
-        given(this.userRepository.save(newUser)).willReturn(newUser);
-
-        //When
-
-        CrewMemberUser returnedUser = this.userService.save(newUser);
-
-        //Then
-
-        assertThat(returnedUser.getId()).isEqualTo(newUser.getId());
-        assertThat(returnedUser.getFirstName()).isEqualTo(newUser.getFirstName());
-        assertThat(returnedUser.getLastName()).isEqualTo(newUser.getLastName());
-        assertThat(returnedUser.getEmail()).isEqualTo(newUser.getEmail());
-        assertThat(returnedUser.getPhoneNumber()).isEqualTo(newUser.getPhoneNumber());
-        assertThat(returnedUser.getRole()).isEqualTo(newUser.getRole());
-        assertThat(returnedUser.getPositions()).isEqualTo(newUser.getPositions());
-        verify(this.userRepository, times(1)).save(newUser);
+        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(validToken));
+        when(passwordEncoder.encode(validDto.password())).thenReturn("hashedPassword");
 
 
+        CrewMemberUser savedUser = userService.addUser("token123", validDto);
 
-
-
-
-
-
-
+        assertEquals(validDto.email(), savedUser.getEmail());
+        assertEquals("hashedPassword", savedUser.getPassword());
+        verify(userRepository).save(any(CrewMemberUser.class));
+        verify(invitationRepository).save(validToken);
+        assertTrue(validToken.isUsed());
     }
 
+    /**
+     * Test that addUser throws 404 when the token is not found.
+     */
+    @Test
+    void testAddUserTokenNotFound() {
+        when(invitationRepository.findByToken("badToken")).thenReturn(Optional.empty());
 
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                userService.addUser("badToken", validDto));
 
+        assertEquals(404, ex.getStatusCode().value());
+    }
 
+    /**
+     * Test that addUser throws 400 when the token is expired.
+     */
+    @Test
+    void TestAddUserTokenIsExpired() {
+        InvitationToken expiredToken = new InvitationToken(
+                validDto.email(),
+                "token123",
+                false,
+                LocalDateTime.now().minusMinutes(1)
+        );
 
+        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(expiredToken));
 
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                userService.addUser("token123", validDto));
 
+        assertEquals(400, ex.getStatusCode().value());
+    }
 
+    /**
+     * Test that addUser throws 400 when the token email does not match DTO email.
+     */
+    @Test
+    void testAddUserEmailDoesNotMatchToken() {
+        InvitationToken mismatchedToken = new InvitationToken(
+                "wrong.email@example.com",
+                "token123",
+                false,
+                LocalDateTime.now().plusHours(1)
+        );
+
+        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(mismatchedToken));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+                userService.addUser("token123", validDto));
+
+        assertEquals(400, ex.getStatusCode().value());
+    }
+
+    /**
+     * Test that validateToken returns true when the token is valid.
+     */
+    @Test
+    void testValidateTokenSuccess() {
+        InvitationToken validToken = new InvitationToken(
+                validDto.email(),
+                "token123",
+                false,
+                LocalDateTime.now().plusHours(1)
+        );
+
+        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(validToken));
+
+        assertTrue(userService.validateToken("token123"));
+    }
+
+    /**
+     * Test that validateToken returns false if the token is used or expired.
+     */
+    @Test
+    void testValidateTokenWhenTokenIsUsedOrExpired() {
+        InvitationToken usedToken = new InvitationToken(
+                validDto.email(),
+                "token123",
+                true,
+                LocalDateTime.now().plusHours(1)
+        );
+        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(usedToken));
+        assertFalse(userService.validateToken("token123"));
+
+        InvitationToken expiredToken = new InvitationToken(
+                validDto.email(),
+                "token123",
+                false,
+                LocalDateTime.now().minusMinutes(1)
+        );
+        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(expiredToken));
+        assertFalse(userService.validateToken("token123"));
+    }
+
+    /**
+     * Test that validateToken returns false if the token does not exist.
+     */
+    @Test
+    void testValidateTokenWhenTokenNotFound() {
+        when(invitationRepository.findByToken("unknownToken")).thenReturn(Optional.empty());
+        assertFalse(userService.validateToken("unknownToken"));
+    }
+
+    /**
+     * Test sendInvites sends an email for each address and stores the invitation.
+     */
+    @Test
+    void testSendInvitesSuccess() {
+        List<String> emails = List.of("test1@example.com", "test2@example.com");
+        EmailDto emailDto = new EmailDto();
+        emailDto.setEmails(emails);
+
+        // Call the method
+        userService.sendInvites(emailDto);
+
+        // Capture how many invites were stored and emails sent
+        verify(invitationRepository, times(2)).save(any(InvitationToken.class));
+        verify(emailService, times(2)).send(anyString(), eq("FrogCrew Invite"), contains("Use this link to register:"));
+    }
 }
