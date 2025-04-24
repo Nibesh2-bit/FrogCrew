@@ -8,6 +8,7 @@ import com.frogcrew.frogcrew_backend.security.invite.InvitationRepository;
 import com.frogcrew.frogcrew_backend.security.invite.dto.EmailDto;
 import com.frogcrew.frogcrew_backend.system.Result;
 import com.frogcrew.frogcrew_backend.system.StatusCode;
+import com.frogcrew.frogcrew_backend.system.exception.ObjectNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -117,4 +119,25 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return null;
     }
+
+    /**
+     * Find all users
+     */
+
+    public List<CrewMemberUser> findAll() {
+
+        return userRepository.findAll();
+    }
+    /**
+     * Find user by Id
+     */
+
+
+    public CrewMemberUser findById(Integer id) {
+        return userRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("CrewMember", id));
+    }
+
+
+
+
 }

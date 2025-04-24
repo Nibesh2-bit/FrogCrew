@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("${api.endpoint.base-url}") // e.g., /api
 public class UserController {
@@ -61,4 +64,36 @@ public class UserController {
         UserDto responseDto = userToUserDtoConverter.convert(savedUser);
         return new Result(true, StatusCode.SUCCESS, "Add Success", responseDto);
     }
+
+    /***
+     * API DOC TESTS
+     */
+
+    /**
+     * Find All Users*/
+
+    @GetMapping("/crewMember")
+    public Result findAllUsers(){
+        List<CrewMemberUser> foundUsers = this.userService.findAll();
+        List<UserDto> userDtos = foundUsers.stream().map(this.userToUserDtoConverter::convert).collect(Collectors.toList());
+
+        //convert list to userDtos
+        return new Result(true, StatusCode.SUCCESS, "Find All Success", userDtos);
+
+
+
+    }
+
+    /**
+     * Find user by Id
+     */
+    @GetMapping("/crewMember/{userId}")
+    public Result findUserById(@PathVariable Integer userId) {
+        CrewMemberUser foundUser = this.userService.findById(userId);
+        UserDto responseDto = userToUserDtoConverter.convert(foundUser);
+        return new Result(true, StatusCode.SUCCESS, "Find Success", responseDto);
+    }
+
+
+
 }
