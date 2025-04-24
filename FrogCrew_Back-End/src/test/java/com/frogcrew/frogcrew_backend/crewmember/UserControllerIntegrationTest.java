@@ -2,8 +2,8 @@ package com.frogcrew.frogcrew_backend.crewmember;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
-import com.frogcrew.frogcrew_backend.security.invite.InvitationRepository;
-import com.frogcrew.frogcrew_backend.security.invite.InvitationToken;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
 import org.hamcrest.Matchers;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;

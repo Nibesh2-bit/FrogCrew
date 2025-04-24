@@ -1,10 +1,10 @@
 package com.frogcrew.frogcrew_backend.crewmember;
 
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
-import com.frogcrew.frogcrew_backend.security.invite.EmailService;
-import com.frogcrew.frogcrew_backend.security.invite.InvitationToken;
-import com.frogcrew.frogcrew_backend.security.invite.InvitationRepository;
-import com.frogcrew.frogcrew_backend.security.invite.dto.EmailDto;
+import com.frogcrew.frogcrew_backend.crewmember.invite.EmailService;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
+import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

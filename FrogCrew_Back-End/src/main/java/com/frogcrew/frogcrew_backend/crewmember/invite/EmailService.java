@@ -1,4 +1,4 @@
-package com.frogcrew.frogcrew_backend.security.invite;
+package com.frogcrew.frogcrew_backend.crewmember.invite;
 
 import org.springframework.stereotype.Service;
 

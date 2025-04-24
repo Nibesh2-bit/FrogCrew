@@ -4,12 +4,10 @@ import com.frogcrew.frogcrew_backend.crewmember.converter.UserDtoToUserConverter
 import com.frogcrew.frogcrew_backend.crewmember.converter.UserToUserDtoConverter;
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
 import com.frogcrew.frogcrew_backend.crewmember.dto.UserDto;
-import com.frogcrew.frogcrew_backend.security.invite.dto.EmailDto;
+import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
 import com.frogcrew.frogcrew_backend.system.Result;
 import com.frogcrew.frogcrew_backend.system.StatusCode;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

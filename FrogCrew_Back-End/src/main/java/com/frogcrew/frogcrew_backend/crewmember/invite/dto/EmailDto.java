@@ -1,4 +1,4 @@
-package com.frogcrew.frogcrew_backend.security.invite.dto;
+package com.frogcrew.frogcrew_backend.crewmember.invite.dto;
 
 
 import jakarta.validation.constraints.Email;

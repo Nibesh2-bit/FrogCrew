@@ -1,6 +1,5 @@
-package com.frogcrew.security;
-import com.frogcrew.frogcrew_backend.security.CustomBasicAuthenticationEntryPoint;
-import com.frogcrew.frogcrew_backend.security.CustomBearerTokenAuthenticationEntryPoint;
+package com.frogcrew.frogcrew_backend.security;
+
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -8,7 +7,7 @@ import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,8 +20,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -117,42 +114,5 @@ public class SecurityConfiguration {
         return NimbusJwtDecoder.withPublicKey(this.publicKey).build();
     }
 
-    /**
-     * Starting in Spring Boot 3.3.0, a JwtAuthenticationConverter is auto-configured if one of the properties is set:
-     * spring.security.oauth2.resourceserver.jwt.authority-prefix
-     * spring.security.oauth2.resourceserver.jwt.principal-claim-name
-     * spring.security.oauth2.resourceserver.jwt.authorities-claim-name
-     *
-     * So, you can remove this JwtAuthenticationConverter bean definition from your configuration and configure the properties instead.
-     * https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.3-Release-Notes#spring-security-improvements
-     *
-     * In application.yml, add this:
-     *   security:
-     *     oauth2:
-     *       resourceserver:
-     *         jwt:
-     *           authorities-claim-name: authorities
-     *           authority-prefix: ""
-     */
-//    @Bean
-//    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-//        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-//
-//        /*
-//        Let’s say that that your authorization server communicates authorities in a custom claim called "authorities".
-//        In that case, you can configure the claim that JwtAuthenticationConverter should inspect, like so:
-//         */
-//        jwtGrantedAuthoritiesConverter.setAuthoritiesClaimName("authorities");
-//
-//        /*
-//        You can also configure the authority prefix to be different as well. The default one is "SCOPE_".
-//        In this project, you need to change it to empty, that is, no prefix!
-//         */
-//        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
-//
-//        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
-//        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
-//        return jwtAuthenticationConverter;
-//    }
 
 }
