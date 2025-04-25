@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
 import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
 import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
+
 import org.hamcrest.Matchers;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,9 +17,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @DisplayName("Integration tests for User API endpoints")
 @Tag("integration")
-class UserControllerIntegrationTest {
+public class UserControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,22 +55,46 @@ class UserControllerIntegrationTest {
     private String email_token;
 
     private String token;
+    @Autowired
+    private UserRepository userRepository;
 
     @Value("${api.endpoint.base-url}")
     String baseUrl;
-
     @BeforeEach
-    void setUp() throws Exception{
-        // Create and save a valid invitation email_token before each test
+    void setUp() throws Exception {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+        // Preload database with a valid CrewMemberUser
+        CrewMemberUser testUser = new CrewMemberUser();
+        testUser.setFirstName("John"); // Required
+        testUser.setLastName("Doe"); // Required
+        testUser.setEmail("john@example.com"); // Required
+        testUser.setPassword(passwordEncoder.encode("123456")); // Required
+        testUser.setPhoneNumber("1234567890"); // Required
+        testUser.setRole("ROLE_USER"); // Required
+        testUser.setPositions(List.of("Engineer")); // A valid list of positions is required
+
+        // Save the user into the database
+        userRepository.save(testUser);
+
+        // Preload an invitation token
         email_token = "123";
         InvitationToken invite = new InvitationToken("test@example.com", email_token, false, LocalDateTime.now().plusHours(1));
         invitationRepository.save(invite);
-        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/auth/login").with(httpBasic("john", "123456"))); // httpBasic() is from spring-security-test.
-        MvcResult mvcResult = resultActions.andDo(print()).andReturn();
-        String contentAsString = mvcResult.getResponse().getContentAsString();
-        JSONObject json = new JSONObject(contentAsString);
-        this.token = "Bearer " + json.getJSONObject("data").getString("token");
 
+        // Perform login with preloaded credentials
+        ResultActions resultActions = this.mockMvc.perform(post(this.baseUrl + "/auth/login")
+                .with(httpBasic("john@example.com", "123456"))); // Valid credentials
+        MvcResult mvcResult = resultActions.andDo(print()).andReturn();
+
+        int status = mvcResult.getResponse().getStatus();
+        if (status == 200) {
+            String contentAsString = mvcResult.getResponse().getContentAsString();
+            JSONObject json = new JSONObject(contentAsString);
+            this.token = "Bearer " + json.getJSONObject("data").getString("token");
+        } else {
+            throw new RuntimeException("Login failed. Test setup cannot proceed.");
+        }
     }
 
     @Test
@@ -113,7 +141,7 @@ class UserControllerIntegrationTest {
      */
     @Test
     @DisplayName("Check find all users (GET)")
-    void testFindAllUserSuccess() throws Exception {
+    void testFindAllUsersSuccess() throws Exception {
         mockMvc.perform(get(this.baseUrl+"/users").accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION, this.token))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.flag").value(true))

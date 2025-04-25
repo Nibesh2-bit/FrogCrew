@@ -1,6 +1,17 @@
 ##spring.application.name=FrogCrew_Back-End
 # application.yml
-
+logging:
+  level:
+    spring:
+      datasource:
+        dataSourceInitialization: DEBUG
+    org:
+      hibernate:
+        SQL: DEBUG           # Logs SQL statements
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE  # Logs SQL query parameters
 spring:
   application:
     name: FrogCrew_Back-End

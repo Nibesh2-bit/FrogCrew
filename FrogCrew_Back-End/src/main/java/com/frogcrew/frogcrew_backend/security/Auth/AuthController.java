@@ -1,4 +1,4 @@
-package com.frogcrew.frogcrew_backend.security;
+package com.frogcrew.frogcrew_backend.security.Auth;
 
 import com.frogcrew.frogcrew_backend.system.Result;
 import com.frogcrew.frogcrew_backend.system.StatusCode;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  * This controller works *after* Spring Security successfully authenticates credentials via Basic Auth.
  */
 @RestController
-@RequestMapping("${api.endpoint.base-url}/users") // Resolves to /api/v1/users
+@RequestMapping("${api.endpoint.base-url}")
 public class AuthController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
@@ -38,7 +38,7 @@ public class AuthController {
      *
      * Objectives:
      * - Log the username
-     * - Ask AuthService to generate login response (token + user data)
+     * - Ask com.frogcrew.frogcrew_backend.security.Auth.AuthService to generate login response (token + user data)
      * - Wrap that in a `Result` (standard response format)
      *
 
@@ -49,7 +49,7 @@ public class AuthController {
      *   - Admin-only operations
      * ...all rely on having this token returned here.
      */
-    @PostMapping("/login")
+    @PostMapping("/auth/login")
     public Result getLoginInfo(Authentication authentication) {
         LOGGER.debug("Authenticated user: '{}'", authentication.getName());
 
