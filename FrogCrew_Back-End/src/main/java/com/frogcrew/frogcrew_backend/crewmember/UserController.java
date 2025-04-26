@@ -4,10 +4,15 @@ import com.frogcrew.frogcrew_backend.crewmember.converter.UserDtoToUserConverter
 import com.frogcrew.frogcrew_backend.crewmember.converter.UserToUserDtoConverter;
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
 import com.frogcrew.frogcrew_backend.crewmember.dto.UserDto;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationService;
 import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
 import com.frogcrew.frogcrew_backend.system.Result;
 import com.frogcrew.frogcrew_backend.system.StatusCode;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,12 +24,16 @@ public class UserController {
 
     private final UserService userService;
     private final UserToUserDtoConverter userToUserDtoConverter;
+    private final UserDtoToUserConverter userDtoToUserConverter;
+    private final InvitationService invitationService;
 
     public UserController(UserService userService,
                           UserDtoToUserConverter userDtoToUserConverter,
-                          UserToUserDtoConverter userToUserDtoConverter) {
+                          UserToUserDtoConverter userToUserDtoConverter, InvitationService invitationService) {
         this.userService = userService;
         this.userToUserDtoConverter = userToUserDtoConverter;
+        this.userDtoToUserConverter = userDtoToUserConverter;
+        this.invitationService = invitationService;
     }
 
     /**
@@ -56,11 +65,16 @@ public class UserController {
      */
 
     @PostMapping("/crewMember")
-    public Result registerCrewMember(@RequestParam String token,
+    public Result registerCrewMember(@RequestParam String email_token,
                                      @RequestBody @Valid CrewMemberDto dto) {
-        CrewMemberUser savedUser = userService.addUser(token, dto);
-        UserDto responseDto = userToUserDtoConverter.convert(savedUser);
-        return new Result(true, StatusCode.SUCCESS, "Add Success", responseDto);
+
+       try {
+           CrewMemberUser savedUser = userService.addUser(email_token, dto);
+           UserDto responseDto = userToUserDtoConverter.convert(savedUser);
+           return new Result(true, StatusCode.SUCCESS, "Add Success", responseDto);
+       }catch (Exception e){
+           return new Result(false, StatusCode.NOT_FOUND, "Provided arguments are invalid, see data for details.", e.getMessage());
+       }
     }
 
     /***

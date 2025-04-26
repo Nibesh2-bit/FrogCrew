@@ -1,4 +1,4 @@
-package com.frogcrew.frogcrew_backend.security.Auth;
+package com.frogcrew.frogcrew_backend.security.Auth.DTO;
 
 import jakarta.validation.constraints.NotEmpty;
 

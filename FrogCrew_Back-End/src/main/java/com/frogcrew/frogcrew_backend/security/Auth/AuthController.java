@@ -1,5 +1,6 @@
 package com.frogcrew.frogcrew_backend.security.Auth;
 
+import com.frogcrew.frogcrew_backend.security.Auth.DTO.AuthDTO;
 import com.frogcrew.frogcrew_backend.system.Result;
 import com.frogcrew.frogcrew_backend.system.StatusCode;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ public class AuthController {
 
     // Service that generates JWT tokens and user info to return on login
     private final AuthService authService;
+
 
     // Inject the service through constructor
     public AuthController(AuthService authService) {
@@ -51,15 +53,31 @@ public class AuthController {
      */
     @PostMapping("/auth/login")
     public Result getLoginInfo(Authentication authentication) {
-        LOGGER.debug("Authenticated user: '{}'", authentication.getName());
+        LOGGER.info("Processing authentication request for user: {}", authentication.getName());
 
-        // Generate and return a JWT + user info using your auth service.
-        return new Result(
-                true,
-                StatusCode.SUCCESS,
-                "User Info and JSON Web Token",
-                this.authService.createLoginInfo(authentication)
-        );
+        try {
+            // Generate the login result
+            AuthDTO authDTO = authService.createLoginInfo(authentication);
+
+            // Return success response
+            return new Result(
+                    true, // flag indicating success
+                    200,  // HTTP status code
+                    "login success", // Success message
+                    authDTO // Data containing AuthDTO (userId, role, token)
+            );
+
+        } catch (Exception e) {
+            // Log any unexpected errors
+            LOGGER.error("Authentication failed for user: {}", authentication.getName(), e);
+
+            // Return error response
+            return new Result(
+                    false, // flag indicating failure
+                    500,   // HTTP status code for server error
+                    "Unexpected error while processing the request. Please try again later.", // Error message
+                    null   // No additional data
+            );
+        }
     }
-
 }

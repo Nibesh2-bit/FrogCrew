@@ -14,27 +14,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-//@Table(name = "users")
+@Table(name = "crew_member_users",
+uniqueConstraints = @UniqueConstraint (columnNames = "email"))
 public class CrewMemberUser  implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @NotEmpty(message = "firstname is required.")
     private String firstName;
 
+    @Column(nullable = false)
     @NotEmpty(message = "Lastname is required.")
     private String lastName;
+    @Column(nullable = false, unique = true)
     @NotEmpty(message = "Email is required.")
     private String email;
-
+    @Column(nullable = false)
     @NotEmpty(message = "Password is required.")
     private String password;
 
-
+    @Column(nullable = false)
     @NotEmpty(message = "Phone number is required.")
     private String phoneNumber;
 
+    @Column(nullable = false)
     @NotEmpty(message = "Role is required.")
     private String role;
 

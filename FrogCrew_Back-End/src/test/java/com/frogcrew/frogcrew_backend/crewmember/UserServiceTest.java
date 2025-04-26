@@ -2,6 +2,7 @@ package com.frogcrew.frogcrew_backend.crewmember;
 
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
 import com.frogcrew.frogcrew_backend.crewmember.invite.EmailService;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationService;
 import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
 import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
 import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,6 +32,9 @@ class UserServiceTest {
 
     @Mock
     private InvitationRepository invitationRepository;
+
+    @Mock
+    private InvitationService invitationService;
 
     @Mock
     private EmailService emailService;
@@ -68,7 +73,7 @@ class UserServiceTest {
                 LocalDateTime.now().plusHours(1)
         );
 
-        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(validToken));
+        when(invitationService.validateToken("token123",validDto.email())).thenReturn(validToken);
         when(passwordEncoder.encode(validDto.password())).thenReturn("hashedPassword");
 
 
@@ -86,32 +91,98 @@ class UserServiceTest {
      */
     @Test
     void testAddUserTokenNotFound() {
-        when(invitationRepository.findByToken("badToken")).thenReturn(Optional.empty());
+// // when(invitationRepository.findByToken("badToken","" ).thenReturn(Optional.empty()));
+//        InvitationToken invalidToken = new InvitationToken(
+//                "badToken",
+//                validDto.email(),
+//                false,
+//                LocalDateTime.now().plusHours(1)
+//        );
+//
+//
+//        when(invitationService.validateToken("badToken", validDto.email())).thenReturn(invalidToken);
+//
+//        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+//                userService.addUser("badToken", validDto));
+//
+////        assertEquals(404, ex.getStatusCode().value());
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
-                userService.addUser("badToken", validDto));
+            // Arrange
+            String token = "nonexistent-token"; // Simulating an invalid token
+            CrewMemberDto dto = new CrewMemberDto(
+                    null,
+                    "test@example.com",  // Email
+                    "password123",       // Password
+                    "John",              // First name
+                    "Doe",               // Last name
+                    "USER",              // Role
+                    null,                // Positions
+                    null                 // Phone Number (optional in this case)
+            );
 
-        assertEquals(404, ex.getStatusCode().value());
+            // Mock `invitationService.validateToken` to throw a `ResponseStatusException` for the invalid token
+            when(invitationService.validateToken(eq(token), eq(dto.email())))
+                    .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not valid"));
+
+            // Act & Assert
+            ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+                userService.addUser(token, dto);
+            });
+
+            // Assertions
+            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());  // Check the status code
+            assertTrue(exception.getReason().contains("Invitation not valid")); // Check the reason message
+
+
+
     }
 
     /**
      * Test that addUser throws 400 when the token is expired.
      */
     @Test
-    void TestAddUserTokenIsExpired() {
+    void TestAddUserTokenIsExpired() {// Arrange
+//        InvitationToken expiredToken = new InvitationToken(
+//                "token123",
+//                validDto.email(),
+//                false,
+//                LocalDateTime.now().minusMinutes(1) // Token has expired
+//        );
+//
+//        // Mocking the `invitationService.validateToken` method to return an expired token
+//        when(invitationService.validateToken("token123", validDto.email())).thenReturn(expiredToken);
+//
+//
+//        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+//                userService.addUser("token123", validDto)); // Call to the method under test
+//
+//        // Verify the thrown exception asserts match the expectations
+//        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode()); // Expecting 400 Bad Request
+//        assertEquals("Token is expired", ex.getReason()); // Validation for error reason (if applicable)
+        // Arrange
+        // Create an expired token
         InvitationToken expiredToken = new InvitationToken(
-                validDto.email(),
                 "token123",
-                false,
-                LocalDateTime.now().minusMinutes(1)
+                validDto.email(),
+                false, // Not used
+                LocalDateTime.now().minusMinutes(1) // Expired timestamp
         );
 
-        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(expiredToken));
+        // Mock the repository to return the expired token
+        when(invitationRepository.findByToken("token123"))
+                .thenReturn(Optional.of(expiredToken));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
-                userService.addUser("token123", validDto));
+        // Act & Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
+                invitationService.validateToken("token123", validDto.email()) // Directly invoke validateToken
+        );
 
-        assertEquals(400, ex.getStatusCode().value());
+        // Validate exception code and reason
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("Token expired or already used", exception.getReason());
+
+        // (Optional) Verify the repository interaction
+        verify(invitationRepository).findByToken("token123");
     }
 
     /**
@@ -119,19 +190,46 @@ class UserServiceTest {
      */
     @Test
     void testAddUserEmailDoesNotMatchToken() {
-        InvitationToken mismatchedToken = new InvitationToken(
-                "wrong.email@example.com",
-                "token123",
-                false,
-                LocalDateTime.now().plusHours(1)
+//        InvitationToken mismatchedToken = new InvitationToken(
+//
+//                "token123",
+//                "wrong.email@example.com",
+//                false,
+//                LocalDateTime.now().plusHours(1)
+//        );
+//
+////        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(mismatchedToken));
+//        when(invitationService.validateToken("token123", "wrong.email@example.com")).thenReturn(mismatchedToken);
+//
+//
+//        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
+//                userService.addUser("token123", validDto));
+//
+//        assertEquals(400, ex.getStatusCode().value());
+        // Arrange
+        String token = "valid-token";
+        CrewMemberDto dto = new CrewMemberDto(null,
+                "user",
+
+                "test",
+                "wrong@example.com",
+
+                "6823049327",
+                "password",
+                null,
+                null
         );
 
-        when(invitationRepository.findByToken("token123")).thenReturn(Optional.of(mismatchedToken));
+        when(invitationService.validateToken(eq(token), eq(dto.email())))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email does not match invitation"));
 
-        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
-                userService.addUser("token123", validDto));
+        // Act & Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            userService.addUser(token, dto);
+        });
 
-        assertEquals(400, ex.getStatusCode().value());
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertTrue(exception.getReason().contains("Email does not match invitation"));
     }
 
     /**

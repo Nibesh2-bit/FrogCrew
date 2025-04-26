@@ -16,10 +16,13 @@ import java.util.function.Supplier;
  * Its job is to authorize requests based on:
  * - The role of the user (does the user have ROLE_user or ROLE_admin?)
  * - The user ID in the JWT vs. the user ID in the URL
+ ** Key Updates:
+ *  * - BR-13: Crew Members (ROLE_user) can access directory information of other Crew Members.
+ *  * - BR-37: Only Admins (ROLE_admin) can access sensitive data.
+ *  * Updated to allow users to view other profiles, but restrict sensitive data to Admins.
+ *  *
+**
  *
- * Why this matters:
- * - Users should only access their **own data** unless they are an admin.
- * - This logic enforces that user `john` can’t access `/users/bob`, unless `john` is an admin.
  *
  * This is plugged into Spring Security config using `.access(new UserRequestAuthorizationManager())`.
  */
@@ -27,7 +30,7 @@ import java.util.function.Supplier;
 public class UserRequestAuthorizationManager implements AuthorizationManager<RequestAuthorizationContext> {
 
     // Define a URI pattern with a path variable {userId}
-    private static final UriTemplate USER_URI_TEMPLATE = new UriTemplate("/users/{userId}");
+    private static final UriTemplate USER_URI_TEMPLATE = new UriTemplate("/crewMember/{userId}");
 
     /**
      * Core authorization logic.
@@ -52,21 +55,30 @@ public class UserRequestAuthorizationManager implements AuthorizationManager<Req
         // We assume the JWT has a claim named "userId"
         String userIdFromJwt = ((Jwt) authentication.getPrincipal()).getClaim("userId").toString();
 
-        // 4. Check if the user has ROLE_user
+        // 4. Check if the user has ROLE_User
         boolean hasUserRole = authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_user"));
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_User"));
 
-        // 5. Check if the user has ROLE_admin
+        // 5. Check if the user has ROLE_Admin
         boolean hasAdminRole = authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_admin"));
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_Admin"));
 
-        // 6. Check if the user is trying to access *their own* data
-        boolean userIdsMatch = userIdFromRequestUri != null && userIdFromRequestUri.equals(userIdFromJwt);
 
-        // 7. Final decision:
-        // - Admins can access any user data
-        // - Users can only access their own
-        boolean isAuthorized = hasAdminRole || (hasUserRole && userIdsMatch);
+        //6.Authorization Logic:
+        boolean isAuthorized = false;
+
+        //case1: Admins can access any Crew Member's Profile
+        if(hasAdminRole){
+            isAuthorized = true;
+        }
+        //case2: Crew Members can accecess any Crew Member's directory info
+
+        else if (hasUserRole && userIdFromRequestUri != null){
+            isAuthorized = true;
+        }
+
+
+        //7: Return the decision
 
         return new AuthorizationDecision(isAuthorized);
     }

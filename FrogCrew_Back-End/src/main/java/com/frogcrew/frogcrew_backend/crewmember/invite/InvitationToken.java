@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "invitation_token")
 public class InvitationToken {
 
     @Id
@@ -17,8 +18,12 @@ public class InvitationToken {
     @Column(nullable = false)
     private String email;
 
+
+    @Column(nullable = false)
     private boolean used  = false;
 
+
+    @Column(nullable = false)
     private LocalDateTime expiresAt;
 
 

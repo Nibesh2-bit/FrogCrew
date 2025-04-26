@@ -2,6 +2,7 @@ package com.frogcrew.frogcrew_backend.crewmember;
 
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
 import com.frogcrew.frogcrew_backend.crewmember.invite.EmailService;
+import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationService;
 import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
 import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
 import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
@@ -9,6 +10,7 @@ import com.frogcrew.frogcrew_backend.system.exception.ObjectNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -30,34 +32,39 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final InvitationRepository invitationRepository;
     private final EmailService emailService;
+    private final InvitationService invitationService;
 
     // Constructor injection of required dependencies
+
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        InvitationRepository invitationRepository,
-                       EmailService emailService) {
+                       EmailService emailService, InvitationService invitationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.invitationRepository = invitationRepository;
         this.emailService = emailService;
+        this.invitationService = invitationService;
     }
     /**
      * Registers a user based on a valid invitation token and the submitted data.
      */
     public CrewMemberUser addUser(String token, @Valid CrewMemberDto dto) {
-        // 1. Check if the token exists
-        InvitationToken invite = invitationRepository.findByToken(token)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not valid"));
+//        // 1. Check if the token exists
+//        InvitationToken invite = invitationRepository.findByToken(token)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not valid"));
+//
+//        // 2. Check if the token is used or expired
+//        if (invite.isUsed() || invite.getExpiresAt().isBefore(LocalDateTime.now())) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired or already used");
+//        }
+//
+//        // 3. Check if email in the token matches the submitted one
+//        if (!invite.getEmail().equals(dto.email())) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email does not match invitation");
+//        }
 
-        // 2. Check if the token is used or expired
-        if (invite.isUsed() || invite.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expired or already used");
-        }
-
-        // 3. Check if email in the token matches the submitted one
-        if (!invite.getEmail().equals(dto.email())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email does not match invitation");
-        }
+        InvitationToken invite = invitationService.validateToken(token, dto.email());
 
         // 4. Create and save the new user
         CrewMemberUser newUser = new CrewMemberUser();
