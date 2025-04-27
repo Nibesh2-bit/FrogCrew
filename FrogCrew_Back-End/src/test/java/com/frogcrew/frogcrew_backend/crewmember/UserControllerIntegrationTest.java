@@ -1,10 +1,10 @@
 package com.frogcrew.frogcrew_backend.crewmember;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
+import com.frogcrew.frogcrew_backend.invite.InvitationRepository;
+import com.frogcrew.frogcrew_backend.invite.InvitationToken;
 
+import com.frogcrew.frogcrew_backend.system.StatusCode;
 import org.hamcrest.Matchers;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +72,7 @@ public class UserControllerIntegrationTest {
         testUser.setEmail("john@example.com");
         testUser.setPassword(passwordEncoder.encode("123456"));
         testUser.setPhoneNumber("1234567890");
-        testUser.setRole("ROLE_USER");
+        testUser.setRole("User");
         testUser.setPositions(List.of("Engineer"));
         userRepository.save(testUser);
 
@@ -90,7 +90,7 @@ public class UserControllerIntegrationTest {
         if (status == 200) {
             String contentAsString = mvcResult.getResponse().getContentAsString();
             JSONObject json = new JSONObject(contentAsString);
-            this.token = "Bearer " + json.getJSONObject("data").getString("token");
+            this.token = "Bearer " + json.getJSONObject("data").getString("Token");
         } else {
             throw new IllegalStateException("Login failed during test setup. Please check credentials or endpoint.");
         }
@@ -148,7 +148,7 @@ public class UserControllerIntegrationTest {
     @Test
     @DisplayName("Find All Users: Success")
     void testFindAllUsersSuccess() throws Exception {
-        mockMvc.perform(get(this.baseUrl + "/users")
+        mockMvc.perform(get(this.baseUrl + "/crewMember")
                         .accept(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, this.token))
                 .andExpect(status().isOk())
@@ -156,4 +156,58 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Find All Success"))
                 .andExpect(jsonPath("$.data", Matchers.hasSize(1))); // Assuming only one user is preloaded
     }
+    @Test
+    @DisplayName("Check findUserById (GET): User with ROLE_user Accessing Another Users Info")
+    void testFindUserByIdSuccess() throws Exception {
+        mockMvc.perform(get(this.baseUrl + "/crewMember/1/user")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, this.token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Find Success"))
+                .andExpect(jsonPath("$.data.firstName").value("John"))
+                .andExpect(jsonPath("$.data.lastName").value("Doe"))
+                .andExpect(jsonPath("$.email").value("john@example.com"))
+                .andExpect(jsonPath("$.positions").value(Matchers.hasSize(1)));
+    }
+    @Test
+    @DisplayName("Check findUserById (GET): User with ROLE_admin Accessing Another Users Info")
+    void testFindUserByIdSuccessAdmin() throws Exception {
+        mockMvc.perform(get(this.baseUrl + "/crewMember/1/user")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, this.token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Find Success"))
+                .andExpect(jsonPath("$.data.firstName").value("John"))
+                .andExpect(jsonPath("$.data.lastName").value("Doe"))
+                        .andExpect(jsonPath("$.email").value("123@tcu.edu"))
+                .andExpect(jsonPath("$.positions").value(Matchers.hasSize(1)));
+
+    }
+
+    @Test
+    @DisplayName("Check findUserById (GET): User with ROLE_user failure")
+    void testFindUserByIdFailure() throws Exception
+        {
+        mockMvc.perform(get(this.baseUrl + "/crewMember/1/user")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, this.token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Could not find user with Id 1 :( "));
+        }
+
+    @Test
+    @DisplayName("Check findUserById (GET): User with ROLE_admin failure")
+    void testFindUserByIdFailureAdmin() throws Exception {
+
+        mockMvc.perform(get(this.baseUrl + "/crewMember/1/admin")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, this.token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Could not find user with Id 1 :( "));
+    }
+
 }

@@ -1,15 +1,15 @@
-package com.frogcrew.frogcrew_backend.crewmember.invite;
+package com.frogcrew.frogcrew_backend.invite;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.lang.module.ResolutionException;
 import java.time.LocalDateTime;
 
 @Service
 public class InvitationService {
-
+    @Autowired
     private final InvitationRepository invitationRepository;
 
     public InvitationService(InvitationRepository invitationRepository) {

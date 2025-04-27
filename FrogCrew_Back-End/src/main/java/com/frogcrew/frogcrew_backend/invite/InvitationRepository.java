@@ -1,4 +1,4 @@
-package com.frogcrew.frogcrew_backend.crewmember.invite;
+package com.frogcrew.frogcrew_backend.invite;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;

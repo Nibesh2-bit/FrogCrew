@@ -3,19 +3,18 @@ package com.frogcrew.frogcrew_backend.crewmember;
 import com.frogcrew.frogcrew_backend.crewmember.converter.UserDtoToUserConverter;
 import com.frogcrew.frogcrew_backend.crewmember.converter.UserToUserDtoConverter;
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
+import com.frogcrew.frogcrew_backend.crewmember.dto.SimpleUserDto;
 import com.frogcrew.frogcrew_backend.crewmember.dto.UserDto;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationService;
-import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
+import com.frogcrew.frogcrew_backend.invite.InvitationService;
+import com.frogcrew.frogcrew_backend.invite.dto.EmailDto;
 import com.frogcrew.frogcrew_backend.system.Result;
 import com.frogcrew.frogcrew_backend.system.StatusCode;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -97,14 +96,26 @@ public class UserController {
     }
 
     /**
-     * Find user by Id
+     * Endpoint for regular users to access directory-level details (SimpleDtoDTO).
+     * This adheres to Business Rule BR-13.
      */
-    @GetMapping("/crewMember/{userId}")
-    public Result findUserById(@PathVariable Integer userId) {
-        CrewMemberUser foundUser = this.userService.findById(userId);
-        UserDto responseDto = userToUserDtoConverter.convert(foundUser);
-        return new Result(true, StatusCode.SUCCESS, "Find Success", responseDto);
+
+    @GetMapping("/crewMember/{userId}/user")
+    public Result findUserByIdUserView(@PathVariable Integer userId) {
+        SimpleUserDto foundUser = this.userService.getCrewMemberForUserView(userId);
+
+        return new Result(true, StatusCode.SUCCESS, "Find Success", foundUser);
     }
+    @PreAuthorize("hasAuthority('ROLE_Admin')")
+    @GetMapping("/crewMember/{userId}/admin")
+    public Result findUserByIdAdminView(@PathVariable Integer userId) {
+        CrewMemberUser foundUser = this.userService.getCrewMemberAdminView(userId);
+        return new Result(true, StatusCode.SUCCESS, "Find Success", foundUser);
+
+    }
+
+
+
 
 
 

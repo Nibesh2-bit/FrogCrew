@@ -1,23 +1,21 @@
 package com.frogcrew.frogcrew_backend.crewmember;
 
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
-import com.frogcrew.frogcrew_backend.crewmember.invite.EmailService;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationService;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
-import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
+import com.frogcrew.frogcrew_backend.crewmember.dto.SimpleUserDto;
+import com.frogcrew.frogcrew_backend.invite.EmailService;
+import com.frogcrew.frogcrew_backend.invite.InvitationService;
+import com.frogcrew.frogcrew_backend.invite.InvitationToken;
+import com.frogcrew.frogcrew_backend.invite.InvitationRepository;
+import com.frogcrew.frogcrew_backend.invite.dto.EmailDto;
 import com.frogcrew.frogcrew_backend.system.exception.ObjectNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -141,10 +139,38 @@ public class UserService implements UserDetailsService {
 
 
     public CrewMemberUser findById(Integer id) {
-        return userRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("CrewMember", id));
+        return userRepository.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
     }
 
+    /**
+     * Finds a specific Crew Member by ID
+     * Business Rule BR-13: A Crew Member can only access directory information.
+     */
+    public SimpleUserDto getCrewMemberForUserView( Integer id){
+        CrewMemberUser crewMemberUser =
+                userRepository.findById(id).orElseThrow(()->new ObjectNotFoundException(
+               "user", id));
 
+        // Map CrewMember entity to a restricted view (SimpleDtoDTO)
+        SimpleUserDto dto = new SimpleUserDto(crewMemberUser.getId(), crewMemberUser.getFirstName(), crewMemberUser.getLastName(), crewMemberUser.getEmail(), crewMemberUser.getRole());
+
+
+        return dto;
+
+
+    }
+
+    /***
+     * Admin Priviledges
+     * **/
+
+
+public CrewMemberUser getCrewMemberAdminView(Integer id) {
+    CrewMemberUser crewMemberUser =
+            userRepository.findById(id).orElseThrow(()->new ObjectNotFoundException(
+                    "user", id));
+    return crewMemberUser;
+}
 
 
 }

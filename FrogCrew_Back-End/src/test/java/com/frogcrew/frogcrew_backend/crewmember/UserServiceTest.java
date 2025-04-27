@@ -1,11 +1,13 @@
 package com.frogcrew.frogcrew_backend.crewmember;
 
 import com.frogcrew.frogcrew_backend.crewmember.dto.CrewMemberDto;
-import com.frogcrew.frogcrew_backend.crewmember.invite.EmailService;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationService;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationToken;
-import com.frogcrew.frogcrew_backend.crewmember.invite.InvitationRepository;
-import com.frogcrew.frogcrew_backend.crewmember.invite.dto.EmailDto;
+import com.frogcrew.frogcrew_backend.crewmember.dto.SimpleUserDto;
+import com.frogcrew.frogcrew_backend.invite.EmailService;
+import com.frogcrew.frogcrew_backend.invite.InvitationService;
+import com.frogcrew.frogcrew_backend.invite.InvitationToken;
+import com.frogcrew.frogcrew_backend.invite.InvitationRepository;
+import com.frogcrew.frogcrew_backend.invite.dto.EmailDto;
+import com.frogcrew.frogcrew_backend.system.exception.ObjectNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,6 +48,9 @@ class UserServiceTest {
     private UserService userService;
 
     private CrewMemberDto validDto;
+    private SimpleUserDto validSimpleUserDto;
+    private CrewMemberUser mockUser;
+    private CrewMemberUser mockAdmin;
 
     @BeforeEach
     void setUp() {
@@ -56,9 +61,30 @@ class UserServiceTest {
                 "john.doe@example.com",
                 "1234567890",
                 "P@ssw0rd",
-                "ADMIN",
+                "Admin",
                 List.of("Referee", "Coach")
         );
+       mockUser = new CrewMemberUser();
+        mockUser.setId(1); // Explicitly set an ID
+        mockUser.setEmail("abc@tcu.edu");
+        mockUser.setFirstName("John");
+        mockUser.setLastName("Doe");
+        mockUser.setPassword("<PASSWORD>");
+        mockUser.setRole("User");
+        mockUser.setPositions(List.of("Referee", "Coach"));
+        mockUser.setPhoneNumber("1234567890");
+
+        mockAdmin = new CrewMemberUser();
+
+        mockAdmin.setId(1); // Explicitly set an ID
+        mockAdmin.setEmail("abc@tcu.edu");
+        mockAdmin.setFirstName("John");
+        mockAdmin.setLastName("Doe");
+        mockAdmin.setPassword("<PASSWORD>");
+        mockAdmin.setRole("User");
+        mockAdmin.setPositions(List.of("Referee", "Coach"));
+        mockAdmin.setPhoneNumber("1234567890");
+
     }
 
     /**
@@ -89,103 +115,58 @@ class UserServiceTest {
     /**
      * Test that addUser throws 404 when the token is not found.
      */
+
     @Test
     void testAddUserTokenNotFound() {
-// // when(invitationRepository.findByToken("badToken","" ).thenReturn(Optional.empty()));
-//        InvitationToken invalidToken = new InvitationToken(
-//                "badToken",
-//                validDto.email(),
-//                false,
-//                LocalDateTime.now().plusHours(1)
-//        );
-//
-//
-//        when(invitationService.validateToken("badToken", validDto.email())).thenReturn(invalidToken);
-//
-//        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
-//                userService.addUser("badToken", validDto));
-//
-////        assertEquals(404, ex.getStatusCode().value());
+        // Arrange
+        String token = "nonexistent-token"; // Simulates an invalid token
+        CrewMemberDto dto = new CrewMemberDto(
+                null,
+                "test@example.com",     // Email
+                "password123",          // Password
+                "John",                 // First name
+                "Doe",                  // Last name
+                "User",                 // Role
+                null,                   // Positions
+                null                    // Phone Number (optional)
+        );
 
-            // Arrange
-            String token = "nonexistent-token"; // Simulating an invalid token
-            CrewMemberDto dto = new CrewMemberDto(
-                    null,
-                    "test@example.com",  // Email
-                    "password123",       // Password
-                    "John",              // First name
-                    "Doe",               // Last name
-                    "USER",              // Role
-                    null,                // Positions
-                    null                 // Phone Number (optional in this case)
-            );
-
-            // Mock `invitationService.validateToken` to throw a `ResponseStatusException` for the invalid token
-            when(invitationService.validateToken(eq(token), eq(dto.email())))
-                    .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not valid"));
-
-            // Act & Assert
-            ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
-                userService.addUser(token, dto);
-            });
-
-            // Assertions
-            assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());  // Check the status code
-            assertTrue(exception.getReason().contains("Invitation not valid")); // Check the reason message
+        // Mock `invitationService.validateToken` to throw a `ResponseStatusException` for an invalid token
+        when(invitationService.validateToken(eq(token), eq(dto.email())))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not valid"));
 
 
 
+        // Act & Assert
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () -> {
+            userService.addUser(token, dto);
+        });
+
+        // Assertions
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());  // Check the status code
+        assertTrue(exception.getReason().contains("Invitation not valid")); // Check the reason message
     }
 
     /**
      * Test that addUser throws 400 when the token is expired.
      */
+
     @Test
-    void TestAddUserTokenIsExpired() {// Arrange
-//        InvitationToken expiredToken = new InvitationToken(
-//                "token123",
-//                validDto.email(),
-//                false,
-//                LocalDateTime.now().minusMinutes(1) // Token has expired
-//        );
-//
-//        // Mocking the `invitationService.validateToken` method to return an expired token
-//        when(invitationService.validateToken("token123", validDto.email())).thenReturn(expiredToken);
-//
-//
-//        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () ->
-//                userService.addUser("token123", validDto)); // Call to the method under test
-//
-//        // Verify the thrown exception asserts match the expectations
-//        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode()); // Expecting 400 Bad Request
-//        assertEquals("Token is expired", ex.getReason()); // Validation for error reason (if applicable)
-        // Arrange
-        // Create an expired token
-        InvitationToken expiredToken = new InvitationToken(
-                "token123",
-                validDto.email(),
-                false, // Not used
-                LocalDateTime.now().minusMinutes(1) // Expired timestamp
-        );
+    public void testAddUserTokenIsExpired() {
+        // Arrange: Mock the repository to return empty Optional for the token
+        when(invitationRepository.findByToken("token123")).thenReturn(Optional.empty());
 
-        // Mock the repository to return the expired token
-        when(invitationRepository.findByToken("token123"))
-                .thenReturn(Optional.of(expiredToken));
+        // Act: Expect ResponseStatusException to be thrown
+        ResponseStatusException exception =
+                assertThrows(ResponseStatusException.class, () -> userService.addUser("token123", validDto));
 
-        // Act & Assert
-        ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
-                invitationService.validateToken("token123", validDto.email()) // Directly invoke validateToken
-        );
-
-        // Validate exception code and reason
+        // Assert: Verify exception details
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertEquals("Token expired or already used", exception.getReason());
 
-        // (Optional) Verify the repository interaction
-        verify(invitationRepository).findByToken("token123");
-    }
-
-    /**
+        // Verify: Ensure repository was queried exactly once
+        verify(invitationRepository, times(1)).findByToken("token123");
+    } /**
      * Test that addUser throws 400 when the token email does not match DTO email.
      */
     @Test
@@ -297,5 +278,83 @@ class UserServiceTest {
         // Capture how many invites were stored and emails sent
         verify(invitationRepository, times(2)).save(any(InvitationToken.class));
         verify(emailService, times(2)).send(anyString(), eq("FrogCrew Invite"), contains("Use this link to register:"));
+    }
+
+    @Test
+    void testFindUserSuccess() {
+        // Mock repository behavior
+
+        when(userRepository.findById(mockUser.getId())).thenReturn(Optional.of(mockUser));
+
+        // Call method under test
+        CrewMemberUser result = userService.findById(mockUser.getId());
+
+        // Assertions
+        assertNotNull(result); // Ensure the result is not null
+        assertEquals(mockUser.getId(), result.getId());
+        assertEquals(mockUser.getEmail(), result.getEmail());
+
+        // Verify repository interactions
+        verify(userRepository, times(1)).findById(mockUser.getId());
+    }
+
+    @Test
+    void testFindUserNotFound() {
+        // Arrange: Mock repository behavior for a non-existent user ID
+        Integer userId = mockUser.getId(); // Descriptive variable for mock user ID
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // Act & Assert: Expect ObjectNotFoundException
+        ObjectNotFoundException notFoundException = assertThrows(
+                ObjectNotFoundException.class,
+                () -> userService.findById(userId), "Can not find user with Id: " + userId + " :("
+        );
+
+
+        // Assert: Verify exception message content
+        String errorMessage = notFoundException.getMessage();
+        assertTrue(errorMessage.contains("user"), "Exception message does not mention 'user'");
+        assertTrue(errorMessage.contains(userId.toString()), "Exception message does not include user Id: " + userId);
+
+        // Verify: Ensure repository interaction is correct
+        verify(userRepository, times(1)).findById(userId);
+    }
+
+
+    @Test
+    void testFindUserAdminViewSuccess() {
+        // Mock repository behavior for admin user
+        mockAdmin.setRole("Admin");
+        when(userRepository.findById(mockAdmin.getId())).thenReturn(Optional.of(mockAdmin));
+
+        // Call method under test
+        CrewMemberUser result = userService.getCrewMemberAdminView(mockAdmin.getId());
+
+        // Assertions
+        assertNotNull(result);
+        assertEquals(mockAdmin.getId(), result.getId());
+        assertEquals(mockAdmin.getRole(), "Admin");
+
+        // Verify repository interaction
+        verify(userRepository, times(1)).findById(mockAdmin.getId());
+    }
+
+    @Test
+    void testFindUserAdminViewNotFound() {
+        // Mock repository behavior for a non-existent user
+        when(userRepository.findById(mockAdmin.getId())).thenReturn(Optional.empty());
+
+        // Assertions and exception handling
+        ObjectNotFoundException exception = assertThrows(
+                ObjectNotFoundException.class,
+                () -> userService.getCrewMemberAdminView(mockAdmin.getId()),
+                "Could not find user with Id: " + mockAdmin.getId() + " :("
+        );
+
+        assertTrue(exception.getMessage().contains("user"));
+        assertTrue(exception.getMessage().contains(mockAdmin.getId().toString()));
+
+        // Verify repository interaction
+        verify(userRepository, times(1)).findById(mockAdmin.getId());
     }
 }
