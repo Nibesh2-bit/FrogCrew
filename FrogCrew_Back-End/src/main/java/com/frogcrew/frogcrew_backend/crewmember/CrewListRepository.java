@@ -4,11 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CrewListRepository extends JpaRepository<CrewList, Integer>{
 
-    CrewList findByGameId(Integer gameId);
+    Optional<CrewList> findByGameId(Integer gameId);
 
     // Find all by gameStart
     List<CrewList> findByGameStart(String gameStart);

@@ -112,7 +112,7 @@ public class CrewedListServiceTest {
         a.setOpponent("Opponent");
 
 
-        given(this.crewListRepository.findByGameId(1)).willReturn(a);
+        given(this.crewListRepository.findByGameId(1)).willReturn(Optional.of(a));
 
         // Act
         CrewList crewList = this.crewListService.findByGameId(1);
