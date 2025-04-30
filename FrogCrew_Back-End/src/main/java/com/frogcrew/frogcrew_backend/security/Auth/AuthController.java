@@ -1,0 +1,83 @@
+package com.frogcrew.frogcrew_backend.security.Auth;
+
+import com.frogcrew.frogcrew_backend.security.Auth.DTO.AuthDTO;
+import com.frogcrew.frogcrew_backend.system.Result;
+import com.frogcrew.frogcrew_backend.system.StatusCode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * AuthController is responsible for handling login requests.
+ * It lives at the endpoint: /api/v1/auth/login (thanks to @RequestMapping and  yml config).
+ *
+ * This controller works *after* Spring Security successfully authenticates credentials via Basic Auth.
+ */
+@RestController
+@RequestMapping("${api.endpoint.base-url}")
+public class AuthController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
+
+    // Service that generates JWT tokens and user info to return on login
+    private final AuthService authService;
+
+
+    // Inject the service through constructor
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    /**
+     *This endpoint is hit after Basic Authentication is successful.
+     * Endpoint: POST /api/v1/users/login
+     *
+     * Spring Security automatically verifies the username & password
+     * and passes the authenticated user into this method via the `Authentication` object.
+     *
+     * Objectives:
+     * - Log the username
+     * - Ask com.frogcrew.frogcrew_backend.security.Auth.AuthService to generate login response (token + user data)
+     * - Wrap that in a `Result` (standard response format)
+     *
+
+     * Use cases like:
+     *   - Crew member registration
+     *   - Viewing schedules
+     *   - Viewing crew profiles
+     *   - Admin-only operations
+     * ...all rely on having this token returned here.
+     */
+    @PostMapping("/auth/login")
+    public Result getLoginInfo(Authentication authentication) {
+        LOGGER.info("Processing authentication request for user: {}", authentication.getName());
+
+        try {
+            // Generate the login result
+            AuthDTO authDTO = authService.createLoginInfo(authentication);
+
+            // Return success response
+            return new Result(
+                    true, // flag indicating success
+                    200,  // HTTP status code
+                    "login success", // Success message
+                    authDTO // Data containing AuthDTO (userId, role, token)
+            );
+
+        } catch (Exception e) {
+            // Log any unexpected errors
+            LOGGER.error("Authentication failed for user: {}", authentication.getName(), e);
+
+            // Return error response
+            return new Result(
+                    false, // flag indicating failure
+                    500,   // HTTP status code for server error
+                    "Unexpected error while processing the request. Please try again later.", // Error message
+                    null   // No additional data
+            );
+        }
+    }
+}

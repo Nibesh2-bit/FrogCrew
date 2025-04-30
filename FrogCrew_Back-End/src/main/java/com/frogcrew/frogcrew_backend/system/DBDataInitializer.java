@@ -1,15 +1,17 @@
 package com.frogcrew.frogcrew_backend.system;
 
-import com.frogcrew.frogcrew_backend.crewmember.CrewMember;
+
+import com.frogcrew.frogcrew_backend.crewmember.CrewMemberUser;
+import com.frogcrew.frogcrew_backend.crewmember.UserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class  DBDataInitializer implements CommandLineRunner {
-    private final CrewMember crewMember;
+    private final UserService userService;
 
-    public DBDataInitializer(CrewMember crewMember) {
-        this.crewMember = crewMember;
+    public DBDataInitializer(UserService userService) {
+        this.userService = userService;
     }
 
     @Override

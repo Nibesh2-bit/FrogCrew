@@ -1,0 +1,46 @@
+# application.yml
+logging:
+  level:
+    spring:
+      datasource:
+        dataSourceInitialization: DEBUG
+    org:
+      hibernate:
+        SQL: DEBUG           # Logs SQL statements
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE  # Logs SQL query parameters
+
+h2:
+  console:
+    enabled: true  # Proper indentation for H2 console settings
+
+spring:
+  application:
+    name: FrogCrew_Back-End
+
+  datasource:
+    url: jdbc:h2:mem:frogcrew
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+
+api:
+  endpoint:
+    base-url: /api/v1
+
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        authorities-claim-name: authorities
+        authority-prefix: ""
