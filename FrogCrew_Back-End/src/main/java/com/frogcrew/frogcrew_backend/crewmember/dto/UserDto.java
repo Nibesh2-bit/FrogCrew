@@ -2,6 +2,7 @@ package com.frogcrew.frogcrew_backend.crewmember.dto;
 
 
 
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
@@ -9,7 +10,7 @@ import jakarta.validation.constraints.Pattern;
 import java.util.List;
 
 public record UserDto (
-
+    @Id
      Integer id,
     @NotEmpty(message = "Firstname is required")
     String firstName,

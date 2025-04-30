@@ -76,9 +76,13 @@ public class SecurityConfiguration {
                         .requestMatchers(HttpMethod.DELETE, this.baseUrl + "/users/**").hasAuthority("ROLE_admin") // Protect the endpoint.
                         .requestMatchers(HttpMethod.PATCH, this.baseUrl + "/users/**").access(this.userRequestAuthorizationManager) // The authorization rule is defined in the UserRequestAuthorizationManager.
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/**").hasAuthority("ROLE_admin")
-                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/admin").access(this.userRequestAuthorizationManager)
+                        .requestMatchers(HttpMethod.PATCH, this.baseUrl + "/users/**").access(this.userRequestAuthorizationManager) // The authorization rule is defined in the UserRequestAuthorizationManager.
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/admin/crewMember/**").hasAuthority("ROLE_Admin")
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/admin/crewMember/**").access(this.userRequestAuthorizationManager)
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/crewMember/**").hasAnyAuthority("ROLE_Admin", "ROLE_User")
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/crewMember/**").access(this.userRequestAuthorizationManager)
                         .requestMatchers(EndpointRequest.to("health", "info", "prometheus")).permitAll()
-                        .requestMatchers(EndpointRequest.toAnyEndpoint().excluding("health", "info", "prometheus")).hasAuthority("ROLE_admin")
+                        .requestMatchers(EndpointRequest.toAnyEndpoint().excluding("health", "info", "prometheus")).hasAuthority("ROLE_Admin")
                         .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll() // Explicitly fallback to antMatcher inside requestMatchers.
                         // Disallow everything else.
                         .anyRequest().authenticated() // Always a good idea to put this as last.

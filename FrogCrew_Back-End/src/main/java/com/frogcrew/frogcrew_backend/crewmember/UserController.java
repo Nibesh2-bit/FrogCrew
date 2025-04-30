@@ -100,14 +100,14 @@ public class UserController {
      * This adheres to Business Rule BR-13.
      */
 
-    @GetMapping("/crewMember/{userId}/user")
+    @GetMapping("/crewMember/{userId}")
     public Result findUserByIdUserView(@PathVariable Integer userId) {
         SimpleUserDto foundUser = this.userService.getCrewMemberForUserView(userId);
 
         return new Result(true, StatusCode.SUCCESS, "Find Success", foundUser);
     }
     @PreAuthorize("hasAuthority('ROLE_Admin')")
-    @GetMapping("/crewMember/{userId}/admin")
+    @GetMapping("/admin/crewMember/{userId}")
     public Result findUserByIdAdminView(@PathVariable Integer userId) {
         CrewMemberUser foundUser = this.userService.getCrewMemberAdminView(userId);
         return new Result(true, StatusCode.SUCCESS, "Find Success", foundUser);

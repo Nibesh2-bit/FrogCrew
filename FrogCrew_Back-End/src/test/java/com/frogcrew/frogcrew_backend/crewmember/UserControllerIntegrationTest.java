@@ -72,7 +72,7 @@ public class UserControllerIntegrationTest {
         testUser.setEmail("john@example.com");
         testUser.setPassword(passwordEncoder.encode("123456"));
         testUser.setPhoneNumber("1234567890");
-        testUser.setRole("User");
+        testUser.setRole("Admin");
         testUser.setPositions(List.of("Engineer"));
         userRepository.save(testUser);
 
@@ -90,7 +90,8 @@ public class UserControllerIntegrationTest {
         if (status == 200) {
             String contentAsString = mvcResult.getResponse().getContentAsString();
             JSONObject json = new JSONObject(contentAsString);
-            this.token = "Bearer " + json.getJSONObject("data").getString("Token");
+            System.out.println("Login Response JSON: " + contentAsString);
+            this.token = "Bearer " + json.getJSONObject("data").getString("token");
         } else {
             throw new IllegalStateException("Login failed during test setup. Please check credentials or endpoint.");
         }
@@ -118,7 +119,7 @@ public class UserControllerIntegrationTest {
         user.setEmail("regular@example.com");
         user.setPhoneNumber("0987654321");
         user.setPassword("RegularPassword");
-        user.setRole("USER");
+        user.setRole("User");
         user.setPositions(List.of("Director", "Producer"));
 
         mockMvc.perform(post(this.baseUrl + "/crewMember")
@@ -159,7 +160,7 @@ public class UserControllerIntegrationTest {
     @Test
     @DisplayName("Check findUserById (GET): User with ROLE_user Accessing Another Users Info")
     void testFindUserByIdSuccess() throws Exception {
-        mockMvc.perform(get(this.baseUrl + "/crewMember/1/user")
+        mockMvc.perform(get(this.baseUrl + "/crewMember/1")
                         .accept(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, this.token))
                 .andExpect(status().isOk())
@@ -173,7 +174,7 @@ public class UserControllerIntegrationTest {
     @Test
     @DisplayName("Check findUserById (GET): User with ROLE_admin Accessing Another Users Info")
     void testFindUserByIdSuccessAdmin() throws Exception {
-        mockMvc.perform(get(this.baseUrl + "/crewMember/1/user")
+        mockMvc.perform(get(this.baseUrl + "/admin/crewMember/1")
                         .accept(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, this.token))
                 .andExpect(status().isOk())
@@ -187,10 +188,10 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Check findUserById (GET): User with ROLE_user failure")
+    @DisplayName("Check findUserById (GET): User with ROLE_User failure")
     void testFindUserByIdFailure() throws Exception
         {
-        mockMvc.perform(get(this.baseUrl + "/crewMember/1/user")
+        mockMvc.perform(get(this.baseUrl + "/crewMember/1")
                         .accept(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, this.token))
                 .andExpect(status().isForbidden())
@@ -199,15 +200,20 @@ public class UserControllerIntegrationTest {
         }
 
     @Test
-    @DisplayName("Check findUserById (GET): User with ROLE_admin failure")
+    @DisplayName("Check findUserById (GET): User with ROLE_Admin failure")
     void testFindUserByIdFailureAdmin() throws Exception {
 
-        mockMvc.perform(get(this.baseUrl + "/crewMember/1/admin")
+        mockMvc.perform(get(this.baseUrl + "/admin/crewMember/1")
                         .accept(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, this.token))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.message").value("Could not find user with Id 1 :( "));
     }
+
+
+
+
+    //UC7
 
 }
