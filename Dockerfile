@@ -3,13 +3,15 @@ FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /builder
 # Copy the Maven or Gradle wrapper and configuration
 COPY mvnw .
-COPY .mvn ./.mvn  # For Maven
+COPY .mvn ./.mvn
+# For Maven
 # COPY build.gradle . # For Gradle
 # COPY gradle . # For Gradle
 
 # Copy project source
 COPY FrogCrew_Back-End/src ./FrogCrew_Back-End/src
-COPY FrogCrew_Back-End/pom.xml ./FrogCrew_Back-End/pom.xml # For Maven
+COPY FrogCrew_Back-End/pom.xml ./FrogCrew_Back-End/pom.xml
+# For Maven
 # COPY FrogCrew_Back-End/build.gradle ./FrogCrew_Back-End/build.gradle # For Gradle
 
 # Build the application (adjust command based on your build tool)
