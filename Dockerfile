@@ -27,5 +27,5 @@ COPY --from=builder /builder/extracted/dependencies/ ./
 COPY --from=builder /builder/extracted/spring-boot-loader/ ./
 COPY --from=builder /builder/extracted/snapshot-dependencies/ ./
 COPY --from=builder /builder/extracted/application/ ./
-# Start the application jar
-ENTRYPOINT ["java", "-jar", "application.jar"]
+# Start the application using the extracted layers
+ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
