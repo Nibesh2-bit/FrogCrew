@@ -24,7 +24,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /application
 # Copy the extracted jar contents from the builder container into the working directory in the runtime container
 COPY --from=builder /builder/extracted/dependencies/ ./
-COPY --from=builder /builder/extracted/spring-boot-loader/org/springframework/boot/loader/ ./org/springframework/boot/loader/
+COPY --from=builder /builder/extracted/spring-boot-loader/ ./
 COPY --from=builder /builder/extracted/snapshot-dependencies/ ./
 COPY --from=builder /builder/extracted/application/ ./
 # Start the application using the extracted layers
