@@ -1,25 +1,31 @@
-# Perform the extraction in a separate builder container
-FROM eclipse-temurin:21-jre AS builder
+# Perform the build in the builder container
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /builder
-# This points to the built jar file in the target folder
-ARG JAR_FILE=target/*.jar
-# Copy the jar file to the working directory and rename it to application.jar
-COPY ${JAR_FILE} application.jar
-# Extract the jar file using an efficient layout
-RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
+
+# Copy the Maven wrapper and configuration
+COPY FrogCrew_Back-End/mvnw .
+COPY FrogCrew_Back-End/.mvn ./.mvn
+
+# Copy project source
+COPY FrogCrew_Back-End/src ./src
+COPY FrogCrew_Back-End/pom.xml ./pom.xml
+
+# Build the application
+RUN cd FrogCrew_Back-End && chmod +x ./mvnw && ./mvnw package -DskipTests
+
+# Find the generated JAR file
+ARG JAR_FILE=FrogCrew_Back-End/target/*.jar
+
+# Perform the extraction in the same builder container
+RUN cd FrogCrew_Back-End && java -Djarmode=tools -jar ${JAR_FILE} extract --layers --destination extracted
 
 # This is the runtime container
 FROM eclipse-temurin:21-jre
 WORKDIR /application
 # Copy the extracted jar contents from the builder container into the working directory in the runtime container
-# Every copy step creates a new docker layer
-# This allows docker to only pull the changes it really needs
-COPY --from=builder /builder/extracted/dependencies/ ./
-COPY --from=builder /builder/extracted/spring-boot-loader/ ./
-COPY --from=builder /builder/extracted/snapshot-dependencies/ ./
-COPY --from=builder /builder/extracted/application/ ./
-COPY --from=builder /builder/extracted/spring-boot-loader/org/springframework/boot/loader/ ./org/springframework/boot/loader/
-# Start the application jar - this is not the uber jar used by the builder
-# This jar only contains application code and references to the extracted jar files
-# This layout is efficient to start up and CDS friendly
+COPY --from=builder /builder/FrogCrew_Back-End/extracted/dependencies/ ./
+COPY --from=builder /builder/FrogCrew_Back-End/extracted/spring-boot-loader/org/springframework/boot/loader/ ./org/springframework/boot/loader/
+COPY --from=builder /builder/FrogCrew_Back-End/extracted/snapshot-dependencies/ ./
+COPY --from=builder /builder/FrogCrew_Back-End/extracted/application/ ./
+# Start the application using the extracted layers
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
