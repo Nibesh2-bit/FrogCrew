@@ -39,7 +39,7 @@ public class CrewListService {
         }
 
         public CrewList findByGameId(Integer Id){
-            return this.crewListRepository.findByGameId(Id).orElseThrow(()-> new ObjectNotFoundException("CrewList","GameId" Id));
+            return this.crewListRepository.findByGameId(Id).orElseThrow(()->new ObjectNotFoundException("Game", Id));
         }
 
         public List<CrewList> findByGameVenue(String venue){
