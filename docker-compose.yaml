@@ -1,0 +1,7 @@
+services:
+  web:
+    build: .
+    ports:
+      - '${PORT}:8080'
+  redis:
+    image: 'redis:alpine'
